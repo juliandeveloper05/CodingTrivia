@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Trivia</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Agregando Font Awesome aquí -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Agregando el favicon -->
+    <link rel="icon" href="../Desafio del programador/c-.png" type="image/x-icon">
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>Coding Trivia</h1>
+
+        <div id="instructions">
+            <p>
+                Instrucciones: Se te mostrará un fragmento de código con un error. Selecciona la opción que representa
+                el código corregido. ¡Consigue una puntuación positiva para ganar!
+            </p>
+            <button id="startButton">Empezar Juego</button>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div id="fact">Puntaje: 0</div>
+        <div id="explanation"></div> <!-- Agregado aquí -->
+        <div id="options"></div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
