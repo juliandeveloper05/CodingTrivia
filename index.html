@@ -7,63 +7,62 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Agregando Google Fonts - Code font -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Favicon -->
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="game-container">
-        <header class="game-header">
-            <h1>Coding Trivia</h1>
-            <div class="score-container">
-                <span id="score">Score: 0</span>
-                <span id="question-counter">Question: 0/10</span>
-            </div>
-        </header>
-
-        <!-- Pantalla de instrucciones -->
-        <div id="instructions" class="screen">
-            <h2>Instructions</h2>
-            <p>Test your programming knowledge!</p>
-            <ul>
-                <li>You'll see code snippets with errors</li>
-                <li>Choose the correct solution</li>
-                <li>Score points for correct answers</li>
-                <li>Reach a positive score to win!</li>
-            </ul>
-            <button id="startButton" class="btn-primary">Start Game</button>
-        </div>
-
-        <!-- Pantalla del juego -->
-        <div id="game-screen" class="screen hidden">
-            <div class="code-container">
-                <pre><code id="code-snippet"></code></pre>
-            </div>
-            
-            <div class="question-container">
-                <p id="question-text"></p>
+    <div class="main-container">
+        <div class="game-container">
+            <!-- Pantalla de inicio/instrucciones -->
+            <div id="instructions-screen" class="screen">
+                <h1>Coding Trivia</h1>
+                <div class="status-indicator">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Optimized for all devices</span>
+                </div>
+                
+                <div class="instructions-content">
+                    <h2>Instructions</h2>
+                    <p>Test your programming knowledge!</p>
+                    <ul>
+                        <li>You'll see code snippets with errors</li>
+                        <li>Choose the correct solution</li>
+                        <li>Score points for correct answers</li>
+                        <li>Reach a positive score to win!</li>
+                    </ul>
+                    <button id="start-button" class="btn-primary">Start Game</button>
+                </div>
             </div>
 
-            <div id="options" class="options-container">
-                <!-- Las opciones se generarán dinámicamente -->
+            <!-- Pantalla del juego -->
+            <div id="game-screen" class="screen hidden">
+                <h1>Coding Trivia</h1>
+                <div class="status-indicator">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Optimized for all devices</span>
+                </div>
+
+                <div class="question-container">
+                    <h2>Question:</h2>
+                    <div class="code-box">
+                        <pre><code id="question-text"></code></pre>
+                    </div>
+                </div>
+
+                <div class="game-status-bar">
+                    <span id="score">Score: 0</span>
+                    <span id="question-counter">Question 1/10</span>
+                </div>
+
+                <div id="options" class="options-grid"></div>
             </div>
 
-            <div id="explanation" class="explanation hidden">
-                <!-- Explicación después de responder -->
+            <!-- Pantalla de fin de juego -->
+            <div id="game-over-screen" class="screen hidden">
+                <h1>Game Over!</h1>
+                <div id="final-score">Final Score: 0</div>
+                <button id="restart-button" class="btn-primary">Play Again</button>
             </div>
-        </div>
-
-        <!-- Pantalla de fin del juego -->
-        <div id="end-screen" class="screen hidden">
-            <h2 id="final-result">Game Over!</h2>
-            <p id="final-score">Final Score: 0</p>
-            <button id="restart-button" class="btn-primary">Play Again</button>
-        </div>
-
-        <!-- Loader -->
-        <div id="loader" class="loader hidden">
-            <div class="spinner"></div>
         </div>
     </div>
 
