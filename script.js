@@ -9,58 +9,86 @@ const questions = [
             "parseInt()"
         ],
         correctAnswer: 1,
-        explanation: "Number(string) is the recommended way to convert a string to a number in JavaScript. It can handle both integers and floating-point numbers."
+        explanation: "Number(string) is the recommended way to convert a string to a number as it can handle both integers and decimals."
     },
     {
-        question: "What's the output of this code?\n\nlet x = '5';\nlet y = +x;\nconsole.log(typeof y);",
+        question: "What's wrong with this code?\n\nfunction suma(a, b) {\n    retrun a + b;\n}",
         options: [
-            "'string'",
-            "'number'",
-            "'undefined'",
-            "'object'"
+            "'retrun' is misspelled, should be 'return'",
+            "Missing semicolon after return",
+            "Parameters should be typed",
+            "Function needs a return type"
         ],
-        correctAnswer: 1,
-        explanation: "The unary plus operator (+) converts its operand to a number. When applied to a string containing a valid number, it converts it to a numeric type."
+        correctAnswer: 0,
+        explanation: "The keyword 'return' is misspelled as 'retrun'. In JavaScript, the correct keyword is 'return'."
     },
     {
-        question: "Which method correctly checks if a value is Not a Number?",
+        question: "What's the output?\n\nconst arr = [1, 2, 3];\nconsole.log(arr[3]);",
         options: [
-            "isNotNumber(x)",
-            "Number.isNaN(x)",
-            "x.isNaN()",
-            "isNaN(x)"
+            "undefined",
+            "null",
+            "3",
+            "ReferenceError"
+        ],
+        correctAnswer: 0,
+        explanation: "Array indexing starts at 0, so arr[3] tries to access the fourth element, which doesn't exist, returning undefined."
+    },
+    {
+        question: "How do you properly check if a variable is undefined?",
+        options: [
+            "if (variable === undefined)",
+            "if (typeof variable === 'undefined')",
+            "if (variable == null)",
+            "if (!variable)"
         ],
         correctAnswer: 1,
-        explanation: "Number.isNaN() is the most reliable method to check if a value is NaN. Unlike global isNaN(), it doesn't do type coercion."
+        explanation: "Using typeof is the safest way to check for undefined as it works even if the variable hasn't been declared."
+    },
+    {
+        question: "What's wrong with this async code?\n\nasync function getData() {\n    return await fetch('/api');\n}\nconst data = getData();\nconsole.log(data);",
+        options: [
+            "Missing await when calling getData()",
+            "fetch is not a function",
+            "Cannot use await in async function",
+            "Return statement is incorrect"
+        ],
+        correctAnswer: 0,
+        explanation: "When calling an async function, you need to await its result or use .then() to handle the Promise."
     }
 ];
 
 // Variables de estado
 let currentQuestionIndex = 0;
 let score = 0;
+let isAnswerSelected = false;
 
 // Referencias DOM
-const questionScreen = document.getElementById('question-screen');
-const gameOver = document.getElementById('game-over');
-const instructions = document.getElementById('instructions');
+const instructionsScreen = document.getElementById('instructions-screen');
+const gameScreen = document.getElementById('game-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const startButton = document.getElementById('start-button');
+const restartButton = document.getElementById('restart-button');
 const questionText = document.getElementById('question-text');
 const optionsContainer = document.getElementById('options');
 const scoreDisplay = document.getElementById('score');
 const questionCounter = document.getElementById('question-counter');
-const startButton = document.getElementById('start-button');
-const restartButton = document.getElementById('restart-button');
+const finalScore = document.getElementById('final-score');
 
 // Event Listeners
 startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', restartGame);
+restartButton.addEventListener('click', () => {
+    hideAllScreens();
+    showScreen(instructionsScreen);
+});
 
 // Funciones principales
 function startGame() {
     score = 0;
     currentQuestionIndex = 0;
-    showScreen(questionScreen);
-    updateScore();
+    hideAllScreens();
+    showScreen(gameScreen);
     loadQuestion();
+    updateScore();
 }
 
 function loadQuestion() {
@@ -69,13 +97,16 @@ function loadQuestion() {
         return;
     }
 
+    isAnswerSelected = false;
     const question = questions[currentQuestionIndex];
+    
+    // Cargar pregunta
     questionText.textContent = question.question;
+    
+    // Actualizar contadores
     updateQuestionCounter();
-    loadOptions(question);
-}
-
-function loadOptions(question) {
+    
+    // Limpiar y cargar opciones
     optionsContainer.innerHTML = '';
     question.options.forEach((option, index) => {
         const button = document.createElement('button');
@@ -87,13 +118,13 @@ function loadOptions(question) {
 }
 
 function selectAnswer(selectedIndex) {
+    if (isAnswerSelected) return;
+    isAnswerSelected = true;
+
     const question = questions[currentQuestionIndex];
     const buttons = optionsContainer.getElementsByClassName('option-button');
     
-    // Deshabilitar todos los botones
-    Array.from(buttons).forEach(button => button.disabled = true);
-    
-    // Mostrar respuesta correcta e incorrecta
+    // Marcar respuesta correcta e incorrecta
     buttons[question.correctAnswer].classList.add('correct');
     if (selectedIndex !== question.correctAnswer) {
         buttons[selectedIndex].classList.add('incorrect');
@@ -102,9 +133,15 @@ function selectAnswer(selectedIndex) {
         score += 2;
     }
     
+    // Deshabilitar todos los botones
+    Array.from(buttons).forEach(button => {
+        button.disabled = true;
+        button.style.cursor = 'default';
+    });
+    
     updateScore();
     
-    // Esperar antes de la siguiente pregunta
+    // Temporizador para siguiente pregunta
     setTimeout(() => {
         currentQuestionIndex++;
         loadQuestion();
@@ -112,20 +149,19 @@ function selectAnswer(selectedIndex) {
 }
 
 function endGame() {
-    const finalScore = document.getElementById('final-score');
+    hideAllScreens();
+    showScreen(gameOverScreen);
     finalScore.textContent = `Final Score: ${score}`;
-    showScreen(gameOver);
-}
-
-function restartGame() {
-    showScreen(instructions);
 }
 
 // Funciones de utilidad
+function hideAllScreens() {
+    instructionsScreen.classList.add('hidden');
+    gameScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+}
+
 function showScreen(screen) {
-    [questionScreen, gameOver, instructions].forEach(s => {
-        s.classList.add('hidden');
-    });
     screen.classList.remove('hidden');
 }
 
@@ -137,9 +173,22 @@ function updateQuestionCounter() {
     questionCounter.textContent = `Question ${currentQuestionIndex + 1}/${questions.length}`;
 }
 
-// Inicialización
-showScreen(instructions);
+// Animaciones y efectos visuales
+function addFadeInEffect(element) {
+    element.classList.add('fade-in');
+    element.addEventListener('animationend', () => {
+        element.classList.remove('fade-in');
+    });
 }
 
-// Iniciar el juego
-init();
+// Manejo de errores
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Error: ', msg, '\nURL: ', url, '\nLine: ', lineNo, '\nColumn: ', columnNo, '\nError object: ', error);
+    return false;
+};
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', () => {
+    hideAllScreens();
+    showScreen(instructionsScreen);
+});
