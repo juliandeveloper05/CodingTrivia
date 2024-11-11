@@ -1,38 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coding Trivia</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Agregando Font Awesome aquí -->
+    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- Agregando el favicon -->
-    <link rel="icon" href="../Desafio del programador/c-.png" type="image/x-icon">
+    <!-- Agregando Google Fonts - Code font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
-
 <body>
     <div class="game-container">
-        <h1>Coding Trivia</h1>
+        <header class="game-header">
+            <h1>Coding Trivia</h1>
+            <div class="score-container">
+                <span id="score">Score: 0</span>
+                <span id="question-counter">Question: 0/10</span>
+            </div>
+        </header>
 
-        <div id="instructions">
-            <p>
-                Instrucciones: Se te mostrará un fragmento de código con un error. Selecciona la opción que representa
-                el código corregido. ¡Consigue una puntuación positiva para ganar!
-            </p>
-            <button id="startButton">Empezar Juego</button>
+        <!-- Pantalla de instrucciones -->
+        <div id="instructions" class="screen">
+            <h2>Instructions</h2>
+            <p>Test your programming knowledge!</p>
+            <ul>
+                <li>You'll see code snippets with errors</li>
+                <li>Choose the correct solution</li>
+                <li>Score points for correct answers</li>
+                <li>Reach a positive score to win!</li>
+            </ul>
+            <button id="startButton" class="btn-primary">Start Game</button>
         </div>
 
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div id="fact">Puntaje: 0</div>
-        <div id="explanation"></div> <!-- Agregado aquí -->
-        <div id="options"></div>
+        <!-- Pantalla del juego -->
+        <div id="game-screen" class="screen hidden">
+            <div class="code-container">
+                <pre><code id="code-snippet"></code></pre>
+            </div>
+            
+            <div class="question-container">
+                <p id="question-text"></p>
+            </div>
+
+            <div id="options" class="options-container">
+                <!-- Las opciones se generarán dinámicamente -->
+            </div>
+
+            <div id="explanation" class="explanation hidden">
+                <!-- Explicación después de responder -->
+            </div>
+        </div>
+
+        <!-- Pantalla de fin del juego -->
+        <div id="end-screen" class="screen hidden">
+            <h2 id="final-result">Game Over!</h2>
+            <p id="final-score">Final Score: 0</p>
+            <button id="restart-button" class="btn-primary">Play Again</button>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="loader hidden">
+            <div class="spinner"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
-
 </body>
-
 </html>
