@@ -1,99 +1,54 @@
 // Banco de preguntas
 const questions = [
     {
-        code: `function suma(a, b) {
-    retrun a + b;
-}`,
-        question: "¿Cuál es el error en este código?",
+        question: "Which of the following is the correct method to convert a string to a number in JavaScript?",
         options: [
-            "La palabra clave 'retrun' está mal escrita, debería ser 'return'",
-            "Falta el punto y coma después del return",
-            "Los parámetros deberían tener tipos definidos",
-            "La función necesita un tipo de retorno"
+            "Number.parseInt()",
+            "Number(string)",
+            "parseFloat()",
+            "parseInt()"
         ],
-        correctAnswer: 0,
-        explanation: "La palabra clave 'return' está mal escrita como 'retrun'. En JavaScript, la palabra clave correcta para devolver un valor es 'return'."
+        correctAnswer: 1,
+        explanation: "Number(string) is the recommended way to convert a string to a number in JavaScript. It can handle both integers and floating-point numbers."
     },
     {
-        code: `const array = [1, 2, 3, 4, 5];
-for(let i = 0; i <= array.length; i++) {
-    console.log(array[i]);
-}`,
-        question: "¿Cuál es el problema con este bucle for?",
+        question: "What's the output of this code?\n\nlet x = '5';\nlet y = +x;\nconsole.log(typeof y);",
         options: [
-            "El operador de comparación debería ser '<' en lugar de '<='",
-            "Falta declarar la variable i",
-            "El array debería ser constante",
-            "console.log no es la mejor forma de mostrar datos"
+            "'string'",
+            "'number'",
+            "'undefined'",
+            "'object'"
         ],
-        correctAnswer: 0,
-        explanation: "El bucle se ejecutará una vez más de lo necesario porque la condición usa '<='. Con un array de longitud 5, i llegará a 5, pero el último índice válido es 4. Esto causará que array[5] sea undefined."
+        correctAnswer: 1,
+        explanation: "The unary plus operator (+) converts its operand to a number. When applied to a string containing a valid number, it converts it to a numeric type."
     },
     {
-        code: `let str = "123";
-let num = str + 4;
-console.log(num);`,
-        question: "¿Cuál será el resultado de este código?",
+        question: "Which method correctly checks if a value is Not a Number?",
         options: [
-            "1234",
-            "127",
-            "Error",
-            "NaN"
+            "isNotNumber(x)",
+            "Number.isNaN(x)",
+            "x.isNaN()",
+            "isNaN(x)"
         ],
-        correctAnswer: 0,
-        explanation: "El operador + con strings realiza concatenación. Cuando un número se suma a un string, el número se convierte a string primero. Por lo tanto, '123' + 4 resulta en '1234'."
-    },
-    {
-        code: `const obj = { name: "John" };
-obj.name = "Jane";
-obj = { name: "Mike" };`,
-        question: "¿Por qué este código genera un error?",
-        options: [
-            "No se puede reasignar una constante",
-            "Los objetos no pueden ser modificados",
-            "El nombre debe ser una constante",
-            "Falta un punto y coma"
-        ],
-        correctAnswer: 0,
-        explanation: "Aunque podemos modificar las propiedades de un objeto constante, no podemos reasignar la variable constante a un nuevo objeto. La última línea intenta reasignar obj, lo cual no está permitido para constantes."
-    },
-    {
-        code: `async function getData() {
-    const response = await fetch('api/data');
-    return response;
-}
-const data = getData();
-console.log(data);`,
-        question: "¿Qué problema hay con este código?",
-        options: [
-            "getData() devuelve una Promise, necesita usar await o .then()",
-            "fetch no es una función válida",
-            "async no es necesario aquí",
-            "response no está definido"
-        ],
-        correctAnswer: 0,
-        explanation: "getData es una función asíncrona que devuelve una Promise. Para obtener el valor real, necesitas usar await getData() o getData().then(data => console.log(data))."
+        correctAnswer: 1,
+        explanation: "Number.isNaN() is the most reliable method to check if a value is NaN. Unlike global isNaN(), it doesn't do type coercion."
     }
 ];
 
-// Variables globales
+// Variables de estado
 let currentQuestionIndex = 0;
 let score = 0;
-let gameStarted = false;
 
-// Elementos del DOM
-const instructionsScreen = document.getElementById('instructions');
-const gameScreen = document.getElementById('game-screen');
-const endScreen = document.getElementById('end-screen');
-const startButton = document.getElementById('startButton');
-const restartButton = document.getElementById('restart-button');
-const codeSnippet = document.getElementById('code-snippet');
+// Referencias DOM
+const questionScreen = document.getElementById('question-screen');
+const gameOver = document.getElementById('game-over');
+const instructions = document.getElementById('instructions');
 const questionText = document.getElementById('question-text');
 const optionsContainer = document.getElementById('options');
 const scoreDisplay = document.getElementById('score');
 const questionCounter = document.getElementById('question-counter');
-const explanation = document.getElementById('explanation');
-const loader = document.getElementById('loader');
+const startButton = document.getElementById('start-button');
+const restartButton = document.getElementById('restart-button');
 
 // Event Listeners
 startButton.addEventListener('click', startGame);
@@ -101,25 +56,11 @@ restartButton.addEventListener('click', restartGame);
 
 // Funciones principales
 function startGame() {
-    gameStarted = true;
-    currentQuestionIndex = 0;
     score = 0;
+    currentQuestionIndex = 0;
+    showScreen(questionScreen);
     updateScore();
-    showScreen(gameScreen);
     loadQuestion();
-}
-
-function restartGame() {
-    showScreen(instructionsScreen);
-    resetGame();
-}
-
-function resetGame() {
-    currentQuestionIndex = 0;
-    score = 0;
-    gameStarted = false;
-    updateScore();
-    explanation.classList.add('hidden');
 }
 
 function loadQuestion() {
@@ -129,26 +70,23 @@ function loadQuestion() {
     }
 
     const question = questions[currentQuestionIndex];
-    codeSnippet.textContent = question.code;
     questionText.textContent = question.question;
     updateQuestionCounter();
-    
-    // Limpiar opciones anteriores
+    loadOptions(question);
+}
+
+function loadOptions(question) {
     optionsContainer.innerHTML = '';
-    
-    // Crear nuevos botones de opciones
     question.options.forEach((option, index) => {
         const button = document.createElement('button');
         button.className = 'option-button';
         button.textContent = option;
-        button.addEventListener('click', () => checkAnswer(index));
+        button.addEventListener('click', () => selectAnswer(index));
         optionsContainer.appendChild(button);
     });
-
-    explanation.classList.add('hidden');
 }
 
-function checkAnswer(selectedIndex) {
+function selectAnswer(selectedIndex) {
     const question = questions[currentQuestionIndex];
     const buttons = optionsContainer.getElementsByClassName('option-button');
     
@@ -165,34 +103,29 @@ function checkAnswer(selectedIndex) {
     }
     
     updateScore();
-    showExplanation(question.explanation);
     
-    // Esperar antes de cargar la siguiente pregunta
+    // Esperar antes de la siguiente pregunta
     setTimeout(() => {
         currentQuestionIndex++;
         loadQuestion();
-    }, 3000);
-}
-
-function showExplanation(text) {
-    explanation.textContent = text;
-    explanation.classList.remove('hidden');
+    }, 1500);
 }
 
 function endGame() {
-    document.getElementById('final-score').textContent = `Final Score: ${score}`;
-    document.getElementById('final-result').textContent = score > 0 ? 'You Win!' : 'Game Over!';
-    showScreen(endScreen);
+    const finalScore = document.getElementById('final-score');
+    finalScore.textContent = `Final Score: ${score}`;
+    showScreen(gameOver);
+}
+
+function restartGame() {
+    showScreen(instructions);
 }
 
 // Funciones de utilidad
 function showScreen(screen) {
-    // Ocultar todas las pantallas
-    instructionsScreen.classList.add('hidden');
-    gameScreen.classList.add('hidden');
-    endScreen.classList.add('hidden');
-    
-    // Mostrar la pantalla solicitada
+    [questionScreen, gameOver, instructions].forEach(s => {
+        s.classList.add('hidden');
+    });
     screen.classList.remove('hidden');
 }
 
@@ -201,18 +134,11 @@ function updateScore() {
 }
 
 function updateQuestionCounter() {
-    questionCounter.textContent = `Question: ${currentQuestionIndex + 1}/${questions.length}`;
-}
-
-// Función para mostrar/ocultar el loader
-function toggleLoader(show) {
-    loader.classList.toggle('hidden', !show);
+    questionCounter.textContent = `Question ${currentQuestionIndex + 1}/${questions.length}`;
 }
 
 // Inicialización
-function init() {
-    showScreen(instructionsScreen);
-    resetGame();
+showScreen(instructions);
 }
 
 // Iniciar el juego
