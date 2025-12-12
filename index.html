@@ -1,71 +1,608 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Coding Trivia</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Font Awesome para iconos -->
+    <title>Coding Trivia: Matrix Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --matrix-green: #0f0;
+            --matrix-dark: #000;
+            --matrix-dim: rgba(0, 20, 0, 0.9);
+            --ui-border: 1px solid #0f0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--matrix-dark);
+            color: var(--matrix-green);
+            font-family: 'Courier New', monospace;
+            overflow: hidden; /* Evitar scrollbars por el canvas */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* El canvas ocupa el fondo */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        /* Capa de interfaz sobre el canvas */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            pointer-events: none; /* Dejar pasar clicks al canvas si es necesario */
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            justify-content: flex-end; /* Botones abajo */
+            padding-bottom: 20px;
+        }
+
+        /* Pantallas (Inicio, Créditos) */
+        .screen {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid var(--matrix-green);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px var(--matrix-green);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            display: none; /* Oculto por defecto */
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Botones de opciones */
+        #options-container {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: auto;
+            width: 100%;
+            opacity: 0; /* Se muestra con animación */
+            transition: opacity 0.5s;
+        }
+
+        .visible {
+            opacity: 1 !important;
+        }
+
+        button {
+            background: rgba(0, 50, 0, 0.7);
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: var(--matrix-green);
+            color: var(--matrix-dark);
+            box-shadow: 0 0 15px var(--matrix-green);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        h1 {
+            text-shadow: 0 0 10px var(--matrix-green);
+            margin-bottom: 20px;
+        }
+
+        ul {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        /* Créditos */
+        .credits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .social-link {
+            display: block;
+            color: var(--matrix-green);
+            text-decoration: none;
+            padding: 5px;
+            border: 1px solid #004400;
+        }
+        
+        .social-link:hover {
+            background: #002200;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* Media Queries */
+        @media (max-width: 600px) {
+            #options-container {
+                grid-template-columns: 1fr;
+            }
+            .screen {
+                padding: 1rem;
+                width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="main-container">
-        <div class="game-container">
-            <!-- Pantalla de inicio/instrucciones -->
-            <div id="instructions-screen" class="screen">
-                <h1>Coding Trivia</h1>
-                <div class="status-indicator">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Optimized for all devices</span>
-                </div>
-                
-                <div class="instructions-content">
-                    <h2>Instructions</h2>
-                    <p>Test your programming knowledge!</p>
-                    <ul>
-                        <li>You'll see code snippets with errors</li>
-                        <li>Choose the correct solution</li>
-                        <li>Score points for correct answers</li>
-                        <li>Reach a positive score to win!</li>
-                    </ul>
-                    <button id="start-button" class="btn-primary">Start Game</button>
-                </div>
+
+    <div id="game-container">
+        <!-- El Canvas Principal -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Capa de Interfaz (Botones y Pantallas superpuestas) -->
+        <div class="ui-layer">
+            
+            <!-- Contenedor de botones de respuesta (se llena dinámicamente) -->
+            <div id="options-container"></div>
+        </div>
+
+        <!-- Pantalla de Inicio -->
+        <div id="start-screen" class="screen active">
+            <h1>&lt;Coding Trivia /&gt;</h1>
+            <p>Accediendo al mainframe...</p>
+            <div style="text-align: left; margin: 20px 0; border: 1px solid #0f0; padding: 10px;">
+                <p>> INSTRUCCIONES:</p>
+                <ul>
+                    <li>Analiza el fragmento de código.</li>
+                    <li>Selecciona la sintaxis correcta.</li>
+                    <li>+1 punto por acierto.</li>
+                    <li>-1 punto por fallo.</li>
+                </ul>
             </div>
+            <button onclick="game.start()">INICIAR SISTEMA</button>
+        </div>
 
-            <!-- Pantalla del juego -->
-            <div id="game-screen" class="screen hidden">
-                <h1>Coding Trivia</h1>
-                <div class="status-indicator">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Optimized for all devices</span>
-                </div>
-
-                <div class="question-container">
-                    <h2>Question:</h2>
-                    <div class="code-box">
-                        <pre><code id="question-text"></code></pre>
-                    </div>
-                </div>
-
-                <div class="game-status-bar">
-                    <span id="score">Score: 0</span>
-                    <span id="question-counter">Question 1/10</span>
-                </div>
-
-                <div id="options" class="options-grid"></div>
+        <!-- Pantalla de Créditos -->
+        <div id="credits-screen" class="screen">
+            <h1>Misión Cumplida</h1>
+            <h2 id="final-score-display"></h2>
+            <p>Desarrollado por: <strong>pale_codepunk</strong></p>
+            <p>Skills detectadas:</p>
+            <div class="credits-grid">
+                <span><i class="fab fa-js"></i> JS</span>
+                <span><i class="fab fa-html5"></i> HTML</span>
+                <span><i class="fab fa-css3"></i> CSS</span>
+                <span><i class="fab fa-react"></i> React</span>
+                <span><i class="fab fa-python"></i> Python</span>
             </div>
-
-            <!-- Pantalla de fin de juego -->
-            <div id="game-over-screen" class="screen hidden">
-                <h1>Game Over!</h1>
-                <div id="final-score">Final Score: 0</div>
-                <button id="restart-button" class="btn-primary">Play Again</button>
+            <p style="margin-top:20px">Redes:</p>
+            <div class="credits-grid">
+                <a href="https://github.com/juliandeveloper05" target="_blank" class="social-link"><i class="fab fa-github"></i> GitHub</a>
+                <a href="https://www.linkedin.com/in/full-stack-julian-soto/" target="_blank" class="social-link"><i class="fab fa-linkedin"></i> LinkedIn</a>
             </div>
+            <button onclick="game.reset()" style="margin-top: 20px; width: 100%;">REINICIAR SISTEMA</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+<script>
+/**
+ * SISTEMA DE TRIVIA MATRIX - CANVAS ENGINE
+ */
+
+const questions = [
+    {
+        category: "JavaScript",
+        text: "¿Cómo conviertes la cadena '10' en un número entero en JS?",
+        options: ["Integer.parse('10')", "parseInt('10')", "toInteger('10')", "Number.toInt('10')"],
+        correct: 1, // Índice del array
+        explanation: "parseInt() analiza un argumento de cadena y devuelve un entero de la base especificada."
+    },
+    {
+        category: "CSS",
+        text: "¿Qué propiedad cambia el color de fondo?",
+        options: ["color", "bgcolor", "background-color", "background-image"],
+        correct: 2,
+        explanation: "background-color establece el color de fondo de un elemento."
+    },
+    {
+        category: "Python",
+        text: "¿Cuál es la salida de: print(3 * '7')?",
+        options: ["21", "777", "Error", "37"],
+        correct: 1,
+        explanation: "En Python, multiplicar un string por un entero repite el string esa cantidad de veces."
+    },
+    {
+        category: "HTML",
+        text: "¿Qué etiqueta es correcta para el salto de línea?",
+        options: ["<br>", "<lb>", "<break>", "<newline>"],
+        correct: 0,
+        explanation: "<br> (Break) produce un salto de línea en el texto."
+    },
+    {
+        category: "Git",
+        text: "¿Qué comando sube los cambios al repositorio remoto?",
+        options: ["git commit", "git upload", "git push", "git save"],
+        correct: 2,
+        explanation: "git push se usa para cargar contenido del repositorio local a un repositorio remoto."
+    },
+    {
+        category: "SQL",
+        text: "¿Cómo seleccionas TODOS los registros de la tabla 'Users'?",
+        options: ["SELECT ALL FROM Users", "SELECT * FROM Users", "GET ALL Users", "SELECT Users"],
+        correct: 1,
+        explanation: "El asterisco (*) es el comodín para seleccionar todas las columnas."
+    },
+    {
+        category: "Java",
+        text: "¿Cuál no es un tipo de dato primitivo en Java?",
+        options: ["int", "boolean", "String", "double"],
+        correct: 2,
+        explanation: "String es una Clase (objeto), no un tipo primitivo (como int, double, boolean)."
+    },
+    {
+        category: "React",
+        text: "¿Qué hook se usa para manejar efectos secundarios?",
+        options: ["useState", "useEffect", "useSideEffect", "useDo"],
+        correct: 1,
+        explanation: "useEffect permite llevar a cabo efectos secundarios en componentes funcionales."
+    }
+];
+
+class MatrixTriviaGame {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        
+        // Estado del juego
+        this.state = 'MENU'; // MENU, PLAYING, FEEDBACK, END
+        this.currentQuestionIndex = 0;
+        this.score = 0;
+        this.typingIndex = 0;
+        this.textToType = "";
+        this.particles = [];
+        
+        // Configuración Matrix Rain
+        this.columns = [];
+        this.fontSize = 16;
+        
+        // Binding
+        this.resize = this.resize.bind(this);
+        this.loop = this.loop.bind(this);
+        
+        // Init
+        window.addEventListener('resize', this.resize);
+        this.resize();
+        this.initMatrix();
+        this.loop();
+    }
+
+    resize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.initMatrix();
+    }
+
+    initMatrix() {
+        this.columns = [];
+        const columnsCount = Math.floor(this.width / this.fontSize);
+        for (let i = 0; i < columnsCount; i++) {
+            this.columns[i] = Math.random() * this.height; // Posición Y inicial aleatoria
+        }
+    }
+
+    start() {
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('credits-screen').classList.remove('active');
+        this.state = 'PLAYING';
+        this.currentQuestionIndex = 0;
+        this.score = 0;
+        this.loadQuestion();
+    }
+
+    reset() {
+        document.getElementById('credits-screen').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+        this.state = 'MENU';
+        document.getElementById('options-container').innerHTML = '';
+        document.getElementById('options-container').classList.remove('visible');
+    }
+
+    loadQuestion() {
+        this.state = 'PLAYING';
+        const q = questions[this.currentQuestionIndex];
+        
+        // Reset animación de texto
+        this.typingIndex = 0;
+        this.textToType = q.text; // Solo la pregunta para animar
+        
+        // Generar botones HTML
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        optsContainer.classList.remove('visible');
+        
+        // Retrasamos la aparición de botones hasta que el texto se "escriba" un poco
+        setTimeout(() => {
+            optsContainer.classList.add('visible');
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.onclick = () => this.checkAnswer(index);
+                optsContainer.appendChild(btn);
+            });
+        }, 1000);
+    }
+
+    checkAnswer(selectedIndex) {
+        const q = questions[this.currentQuestionIndex];
+        const isCorrect = selectedIndex === q.correct;
+        
+        // Actualizar puntaje
+        if (isCorrect) {
+            this.score++;
+            this.spawnParticles(this.width / 2, this.height / 2, '#0f0');
+        } else {
+            this.score = Math.max(0, this.score - 1);
+            this.spawnParticles(this.width / 2, this.height / 2, '#f00');
+        }
+
+        // Estado Feedback
+        this.state = 'FEEDBACK';
+        this.feedbackMessage = isCorrect ? "¡ACCESO CONCEDIDO!" : "¡ACCESO DENEGADO!";
+        this.feedbackColor = isCorrect ? "#0f0" : "#f00";
+        this.explanationText = q.explanation;
+        
+        // Limpiar botones
+        document.getElementById('options-container').classList.remove('visible');
+        
+        // Botón continuar (creado dinámicamente)
+        setTimeout(() => {
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            const nextBtn = document.createElement('button');
+            nextBtn.innerText = "CONTINUAR >>";
+            nextBtn.style.gridColumn = "span 2";
+            nextBtn.style.borderColor = this.feedbackColor;
+            nextBtn.onclick = () => this.nextQuestion();
+            optsContainer.appendChild(nextBtn);
+            optsContainer.classList.add('visible');
+        }, 500);
+    }
+
+    nextQuestion() {
+        this.currentQuestionIndex++;
+        if (this.currentQuestionIndex >= questions.length) {
+            this.endGame();
+        } else {
+            this.loadQuestion();
+        }
+    }
+
+    endGame() {
+        this.state = 'END';
+        document.getElementById('options-container').innerHTML = '';
+        const credits = document.getElementById('credits-screen');
+        document.getElementById('final-score-display').innerText = `Puntaje Final: ${this.score}/${questions.length}`;
+        credits.classList.add('active');
+    }
+
+    spawnParticles(x, y, color) {
+        for (let i = 0; i < 30; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 1.0,
+                color: color
+            });
+        }
+    }
+
+    // --- RENDER & UPDATE ---
+
+    drawMatrixRain() {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // Trail effect
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        this.ctx.fillStyle = '#0f0';
+        this.ctx.font = this.fontSize + 'px monospace';
+
+        for (let i = 0; i < this.columns.length; i++) {
+            const char = String.fromCharCode(0x30A0 + Math.random() * 96); // Katakana random
+            const x = i * this.fontSize;
+            const y = this.columns[i] * this.fontSize;
+
+            this.ctx.fillText(char, x, y);
+
+            if (y > this.height && Math.random() > 0.975) {
+                this.columns[i] = 0;
+            }
+            this.columns[i]++;
+        }
+    }
+
+    drawUI() {
+        // Marco fijo
+        this.ctx.strokeStyle = '#003300';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(20, 20, this.width - 40, this.height - 40);
+
+        // Header Info
+        this.ctx.fillStyle = '#0f0';
+        this.ctx.font = 'bold 20px "Courier New"';
+        this.ctx.fillText(`SCORE: ${this.score}`, 40, 50);
+        this.ctx.fillText(`Q: ${this.currentQuestionIndex + 1}/${questions.length}`, this.width - 140, 50);
+
+        if (this.state === 'PLAYING') {
+            this.drawQuestion();
+        } else if (this.state === 'FEEDBACK') {
+            this.drawFeedback();
+        }
+    }
+
+    drawQuestion() {
+        const q = questions[this.currentQuestionIndex];
+        
+        // Caja de pregunta
+        const boxY = this.height * 0.2;
+        const boxHeight = this.height * 0.3;
+        
+        // Fondo semi-transparente para legibilidad
+        this.ctx.fillStyle = 'rgba(0, 20, 0, 0.8)';
+        this.ctx.fillRect(40, boxY, this.width - 80, boxHeight);
+        this.ctx.strokeStyle = '#0f0';
+        this.ctx.strokeRect(40, boxY, this.width - 80, boxHeight);
+
+        // Categoría
+        this.ctx.fillStyle = '#0f0';
+        this.ctx.font = '16px "Courier New"';
+        this.ctx.fillText(`[ SYSTEM: ${q.category} ]`, 50, boxY - 10);
+
+        // Efecto de máquina de escribir
+        if (this.typingIndex < this.textToType.length) {
+            this.typingIndex += 0.5; // Velocidad de tipeo
+        }
+        
+        const currentText = this.textToType.substring(0, Math.floor(this.typingIndex));
+        
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = 'bold 24px "Courier New"';
+        this.wrapText(currentText, 60, boxY + 50, this.width - 120, 35);
+        
+        // Cursor parpadeante
+        if (Math.floor(Date.now() / 500) % 2 === 0 && this.typingIndex < this.textToType.length) {
+            // Se puede dibujar un cursor al final si calculamos la posición,
+            // pero por simplicidad en canvas multilínea, lo omitimos o lo ponemos fijo.
+        }
+    }
+
+    drawFeedback() {
+        const centerY = this.height * 0.4;
+        
+        this.ctx.save();
+        this.ctx.textAlign = 'center';
+        
+        // Título Feedback
+        this.ctx.fillStyle = this.feedbackColor;
+        this.ctx.font = 'bold 40px "Courier New"';
+        this.ctx.fillText(this.feedbackMessage, this.width / 2, centerY);
+        
+        // Explicación
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '20px "Courier New"';
+        this.wrapText(this.explanationText, this.width / 2, centerY + 50, this.width - 100, 30, true);
+        
+        this.ctx.restore();
+    }
+
+    drawParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            
+            this.ctx.globalAlpha = p.life;
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
+
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+
+    // Utilidad para texto multilínea en Canvas
+    wrapText(text, x, y, maxWidth, lineHeight, center = false) {
+        const words = text.split(' ');
+        let line = '';
+        const startX = x;
+
+        for(let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = this.ctx.measureText(testLine);
+            const testWidth = metrics.width;
+            
+            if (testWidth > maxWidth && n > 0) {
+                if (center) this.ctx.fillText(line, x, y);
+                else this.ctx.fillText(line, x, y);
+                
+                line = words[n] + ' ';
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        this.ctx.fillText(line, x, y);
+    }
+
+    loop() {
+        // 1. Limpiar/Dibujar fondo Matrix
+        this.drawMatrixRain();
+        
+        // 2. Dibujar Elementos del Juego si no estamos en Menú
+        if (this.state !== 'MENU' && this.state !== 'END') {
+            this.drawUI();
+            this.drawParticles();
+        }
+
+        requestAnimationFrame(this.loop);
+    }
+}
+
+// Iniciar el juego
+const game = new MatrixTriviaGame();
+
+</script>
 </body>
+</html>
 </html>
